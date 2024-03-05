@@ -1,6 +1,10 @@
 require('dotenv').config();
-const { exchangeInfo } = require("./api");
+
+const binance = require('./settings');
 const stream = require("./stream");
+//const  { exchangeInfo }  = require("./api");
+
+
 
 const QUOTE = process.env.QUOTE;
 const AMOUNT = parseInt(process.env.AMOUNT);
@@ -58,7 +62,14 @@ function getSymbolMap(symbols) {
     return map;
 }
 
-function processBuyBuySell(buyBuySell) {
+
+
+
+
+
+
+
+async function processBuyBuySell(buyBuySell) {
     for (let i = 0; i < buyBuySell.length; i++) {
         const candidate = buyBuySell[i];
 
@@ -79,14 +90,20 @@ function processBuyBuySell(buyBuySell) {
         //se tem o preço dos 3, pode analisar a lucratividade
         const crossRate = (1 / priceBuy1) * (1 / priceBuy2) * priceSell1;
         if (crossRate > PROFITABILITY) {
+            let saldo1 = await stream.getSymbolBalance(candidate.buy1.symbol);
             console.log(`OP BBS EM ${candidate.buy1.symbol} > ${candidate.buy2.symbol} > ${candidate.sell1.symbol} = ${crossRate}`);
             console.log(`Investindo ${QUOTE}${AMOUNT}, retorna ${QUOTE}${((AMOUNT / priceBuy1) / priceBuy2) * priceSell1}`);
+            console.log("SALDO em ",saldo1);
+
         }
     }
 }
 
 
 function processBuySellSell(buySellSell) {
+    
+    
+
     for (let i = 0; i < buySellSell.length; i++) {
         const candidate = buySellSell[i];
 
@@ -106,16 +123,24 @@ function processBuySellSell(buySellSell) {
         //se tem o preço dos 3, pode analisar a lucratividade
         const crossRate = (1 / priceBuy1) * priceSell1 * priceSell2;
         if (crossRate > PROFITABILITY) {
-            console.log(`OP BSS EM ${candidate.buy1.symbol} > ${candidate.sell1.symbol} > ${candidate.sell2.symbol} = ${crossRate}`);
+
+            console.log(`OPERAÇÃO BSS EM ${candidate.buy1.symbol} > ${candidate.sell1.symbol} > ${candidate.sell2.symbol} = ${crossRate}`);
             console.log(`Investindo ${QUOTE}${AMOUNT}, retorna ${QUOTE}${((AMOUNT / priceBuy1) * priceSell1) * priceSell2}`);
+
         }
     }
 }
 
+
+
+
 async function start() {
+
+   
+
     //pega todas moedas que estão sendo negociadas
     console.log('Loading Exchange Info...');
-    const allSymbols = await exchangeInfo();
+    const allSymbols = await stream.exchangeInfo();
 
     //moedas que você pode comprar
     const buySymbols = allSymbols.filter(s => s.quote === QUOTE);
@@ -132,10 +157,13 @@ async function start() {
     const buySellSell = getBuySellSell(buySymbols, allSymbols, symbolsMap);
     console.log('There are ' + buySellSell.length + " pairs that we can do BSS");
 
-    setInterval(async () => {
+    setInterval(async () => {       
+
         console.log(new Date());
         processBuyBuySell(buyBuySell);
-        processBuySellSell(buySellSell);
+        //processBuySellSell(buySellSell);
+
+
     }, INTERVAL)
 }
 
