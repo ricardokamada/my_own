@@ -90,10 +90,13 @@ async function processBuyBuySell(buyBuySell) {
         //se tem o preço dos 3, pode analisar a lucratividade
         const crossRate = (1 / priceBuy1) * (1 / priceBuy2) * priceSell1;
         if (crossRate > PROFITABILITY) {
-            let saldo1 = await stream.getSymbolBalance(candidate.buy1.symbol);
+            
             console.log(`OP BBS EM ${candidate.buy1.symbol} > ${candidate.buy2.symbol} > ${candidate.sell1.symbol} = ${crossRate}`);
+            
+            let purchase1 = await stream.execute_purchase_order(candidate.buy1.symbol);
+            let balance1 = await stream.getSymbolBalance(candidate.buy1.base)
             console.log(`Investindo ${QUOTE}${AMOUNT}, retorna ${QUOTE}${((AMOUNT / priceBuy1) / priceBuy2) * priceSell1}`);
-            console.log("SALDO em ",saldo1);
+            console.log("@@ ",purchase1);
 
         }
     }
@@ -123,7 +126,7 @@ function processBuySellSell(buySellSell) {
         //se tem o preço dos 3, pode analisar a lucratividade
         const crossRate = (1 / priceBuy1) * priceSell1 * priceSell2;
         if (crossRate > PROFITABILITY) {
-
+            
             console.log(`OPERAÇÃO BSS EM ${candidate.buy1.symbol} > ${candidate.sell1.symbol} > ${candidate.sell2.symbol} = ${crossRate}`);
             console.log(`Investindo ${QUOTE}${AMOUNT}, retorna ${QUOTE}${((AMOUNT / priceBuy1) * priceSell1) * priceSell2}`);
 

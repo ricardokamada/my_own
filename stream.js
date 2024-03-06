@@ -50,13 +50,22 @@ async function getSymbolBalance(symbol) {
     }
 }
 
+async function execute_purchase_order(symbol) {
+    try {
+
+        console.log("trying purchase : ", symbol);      
+        const firstOrder = await binance.marketBuy(symbol, parseInt(process.env.AMOUNT)); // Exemplo: BTCUSDT / QUANTITY
+        console.log('Purchase made successfully:', firstOrder);
+        
+    } catch (error) {
+        console.error('An error occurred while making the purchase:', error);
+    }
+
+    
+}
 
 
 
 
 
-
-
-
-
-module.exports = { exchangeInfo, getBook , getSymbolBalance};
+module.exports = { exchangeInfo, getBook , execute_purchase_order, getSymbolBalance };
