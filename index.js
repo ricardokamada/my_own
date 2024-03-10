@@ -65,7 +65,9 @@ function getSymbolMap(symbols) {
 
 
 
-
+async function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 
 
@@ -92,14 +94,53 @@ async function processBuyBuySell(buyBuySell) {
         if (crossRate > PROFITABILITY) {
             
             console.log(`OP BBS EM ${candidate.buy1.symbol} > ${candidate.buy2.symbol} > ${candidate.sell1.symbol} = ${crossRate}`);
+            let quantity = parseFloat(process.env.AMOUNT / priceBuy1).toFixed(4);
             
-            let purchase1 = await stream.execute_purchase_order(candidate.buy1.symbol);
-            let balance1 = await stream.getSymbolBalance(candidate.buy1.base)
-            console.log(`Investindo ${QUOTE}${AMOUNT}, retorna ${QUOTE}${((AMOUNT / priceBuy1) / priceBuy2) * priceSell1}`);
-            console.log("@@ ",purchase1);
 
+            try {    
+            //realiza a primeira compra   
+            quantity = Math.max(candidate.buy1.minLotSize, quantity);  // garante a compra usando valor de minLotSize  
+            quantity = parseFloat(quantity.toFixed(4)); 
+            await binance.marketBuy(candidate.buy1.symbol, quantity);
+            console.log("Primeira compra realizada com sucesso !", candidate.buy1.symbol + "Foi comprado o total de :" + quantity);
+            //await stream.execute_purchase_order(candidate.buy1.symbol, quantity);
+            } catch (error) {
+                console.error('Houve um erro na primeira compra :', error);
+            }
+            
+
+            //####################################################################################
+
+            //const quantidadeOutraMoeda = Math.floor(btcAmount / stepSize); // Arredonda para baixo para garantir que seja um número inteiro
+            try {
+            //Realiza a segunda compra com o saldo da primeira compra.
+            quantity = Math.round(quantity / priceBuy2) * candidate.buy2.quantityPrecision;
+            await binance.marketBuy(candidate.buy2.symbol, quantity);
+            console.log("Segunda compra realizada com sucesso !", candidate.buy2.symbol, "TOTAL de :" + quantity );
+            //await stream.execute_purchase_order(candidate.buy2.symbol, balance);
+            } catch (error) {
+                console.error('Houve um erro na segunda compra :', error);
+            }
+
+
+            //#####################################################################################
+
+            try {
+                //Realiza a ultima venda.
+                quantity = Math.floor(quantity);
+                console.log("Vendendo no par",candidate.sell1.symbol, "quantidade de :",  quantity);
+                console.log("Min LOTSIZE: ", candidate.sell1.minLotSize);
+                console.log("QntdPrecision : ", candidate.sell1.quantityPrecision);
+                await binance.marketSell(candidate.sell1.symbol, quantity);
+                console.log("Venda realizado com sucesso !", candidate.sell1.symbol, "TOTAL de :" + quantity );
+                } catch (error) {
+                    console.error('Houve um erro na venda compra :', error);
+                }
+                //process.exit(0);
+                
         }
     }
+    
 }
 
 

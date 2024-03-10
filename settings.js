@@ -7,7 +7,8 @@ const binance = new Binance().options({
   useServerTime: true,
   testnet: true,
   urls: {
-    base: "https://testnet.binance.vision/api/"
+    base: "https://testnet.binance.vision/api/",
+    useServerTime: true,
   }
 });
 

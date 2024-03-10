@@ -10,7 +10,9 @@ async function exchangeInfo() {
       return {
         symbol: s.symbol,
         base: s.baseAsset,
-        quote:s.quoteAsset
+        quote:s.quoteAsset,
+        minLotSize: parseFloat(s.filters.find(f => f.filterType === 'LOT_SIZE').minQty),
+        quantityPrecision: s.filters.find(f => f.filterType === 'LOT_SIZE').stepSize
       }
     })
   }
@@ -50,19 +52,22 @@ async function getSymbolBalance(symbol) {
     }
 }
 
-async function execute_purchase_order(symbol) {
-    try {
+async function execute_purchase_order(symbol, qtd) {
+    try {        
 
-        console.log("trying purchase : ", symbol);      
-        const firstOrder = await binance.marketBuy(symbol, parseInt(process.env.AMOUNT)); // Exemplo: BTCUSDT / QUANTITY
-        console.log('Purchase made successfully:', firstOrder);
-        
+        binance.marketBuy(symbol, qtd, (error, response) => {
+            if (error) {
+                console.error('An error occurred while making the purchase:', error);
+            } else {
+                console.log(`Purchase made successfully in pair : ${symbol},  qtd: ${qtd} @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@`);
+            }
+            
+        });
     } catch (error) {
         console.error('An error occurred while making the purchase:', error);
     }
-
-    
 }
+
 
 
 

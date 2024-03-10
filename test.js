@@ -1,5 +1,44 @@
 require('dotenv').config();
-const binance = require('./settings');
+
+const Binance = require('node-binance-api');
+const binance = new Binance().options({
+  APIKEY: 'qLiJoXnyeiffZYqEcbzQ6pSZKHGWbfYcpntISLU04godqHvokNH4RBgN0rMWqkJI',
+  APISECRET: 'ABPzh0iq3pjhYlFE3XjcYEmkXTITdI8qJjNX3vISD91wpyAPAp7Ln4HUKH9iSOtV',
+  recvWindow: 60000,
+  family: 0,
+  urls: {
+    base: "https://testnet.binance.vision/api/",
+
+  }
+});
+
+
+
+
+// const symbol = 'BTCUSDT'; // Substitua 'BTCUSDT' pelo par de negociação desejado
+
+// binance.exchangeInfo((error, data) => {
+//     if (error) {
+//         console.error("Erro ao buscar informações de troca:", error);
+//         return;
+//     }
+    
+//     // Encontre o símbolo específico nas informações da troca
+//     const symbolInfo = data.symbols.find(s => s.symbol === symbol);
+//     if (!symbolInfo) {
+//         console.error("Símbolo não encontrado:", symbol);
+//         return;
+//     }
+
+//     // Obtenha as restrições de tamanho do lote para o símbolo
+//     const lotSizeFilter = symbolInfo.filters.find(filter => filter.filterType === 'LOT_SIZE');
+//     if (!lotSizeFilter) {
+//         console.error("Restrições de tamanho de lote não encontradas para o símbolo:", symbol);
+//         return;
+//     }
+
+//     console.log("Restrições de tamanho do lote para", symbol, ":", lotSizeFilter);
+// });
 
 
 
@@ -24,17 +63,34 @@ async function getSymbolBalance(symbol) {
 }
 
 
+
+
+// function comprarMercado(symbol, quantity) {
+//     binance.marketBuy("BTCUSDT", 0.001, (error, response) => {
+//       if (error) {
+//         console.log("Erro na compra:", error);
+//       } else {
+//         console.log("Resposta da compra:", response);
+//       }
+//     });
+//   }
+
 async function x() {
     try {
-        let ativo = await getSymbolBalance("USDT");
-        console.log(ativo);
+        let a = await getSymbolBalance("USDT");
+        console.log(a);
+
+
     } catch (error) {
         console.error("Erro ao obter saldo:", error);
     }
 }
 
 
-x()
+x();
+
+//binance.marketSell("BTCUSDT", 1.0414);
+
 
 
 
@@ -204,3 +260,4 @@ x()
 
     
 // }
+
