@@ -12,7 +12,8 @@ async function exchangeInfo() {
         base: s.baseAsset,
         quote:s.quoteAsset,
         minLotSize: parseFloat(s.filters.find(f => f.filterType === 'LOT_SIZE').minQty),
-        quantityPrecision: s.filters.find(f => f.filterType === 'LOT_SIZE').stepSize
+        quantityPrecision: s.filters.find(f => f.filterType === 'LOT_SIZE').stepSize,
+        minNotional: parseFloat(s.filters.find(f => f.filterType === 'NOTIONAL').minNotional)
       }
     })
   }
@@ -33,7 +34,7 @@ function getBook(symbol) {
 // Função para obter o saldo de um símbolo específico
 async function getSymbolBalance(symbol) {
 
-    console.log("IMPRIMINDO SYMBOL CHEGANDO EM GETBALANCE :", symbol)
+    
     try {
         // Chamada à função binance.balance() para obter todos os saldos
         const balances = await binance.balance();

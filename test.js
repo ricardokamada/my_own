@@ -63,7 +63,7 @@ async function getSymbolBalance(symbol) {
 }
 
 
-
+//binance.marketSell("BTCUSDT" , 0.0041);
 
 // function comprarMercado(symbol, quantity) {
 //     binance.marketBuy("BTCUSDT", 0.001, (error, response) => {

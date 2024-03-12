@@ -40,15 +40,15 @@ function getBuySellSell(buySymbols, allSymbols, symbolsMap) {
     const buySellSell = [];
     for (let i = 0; i < buySymbols.length; i++) {
         const buy1 = buySymbols[i];
- 
+
         const right = allSymbols.filter(s => s.base === buy1.base && s.quote !== buy1.quote);
- 
+
         for (let j = 0; j < right.length; j++) {
             const sell1 = right[j];
- 
+
             const sell2 = symbolsMap[sell1.quote + buy1.quote];
             if (!sell2) continue;
- 
+
             buySellSell.push({ buy1, sell1, sell2 });
         }
     }
@@ -65,9 +65,15 @@ function getSymbolMap(symbols) {
 
 
 
-async function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+function formatNumber(value, step_size) {
+    // Calcula o número de casas decimais com base em step_size
+    const decimalPlaces = Math.max(0, -Math.floor(Math.log10(step_size)));
+    // Formata o número com o número correto de casas decimais
+    return value.toFixed(decimalPlaces);
 }
+
+
+//console.log(formatNumber(value, step_size)); // Saída: 123.46
 
 
 
@@ -92,61 +98,98 @@ async function processBuyBuySell(buyBuySell) {
         //se tem o preço dos 3, pode analisar a lucratividade
         const crossRate = (1 / priceBuy1) * (1 / priceBuy2) * priceSell1;
         if (crossRate > PROFITABILITY) {
-            
-            console.log(`OP BBS EM ${candidate.buy1.symbol} > ${candidate.buy2.symbol} > ${candidate.sell1.symbol} = ${crossRate}`);
-            let quantity = parseFloat(process.env.AMOUNT / priceBuy1).toFixed(4);
-            
 
-            try {    
-            //realiza a primeira compra   
-            quantity = Math.max(candidate.buy1.minLotSize, quantity);  // garante a compra usando valor de minLotSize  
-            quantity = parseFloat(quantity.toFixed(4)); 
-            await binance.marketBuy(candidate.buy1.symbol, quantity);
-            console.log("Primeira compra realizada com sucesso !", candidate.buy1.symbol + "Foi comprado o total de :" + quantity);
-            //await stream.execute_purchase_order(candidate.buy1.symbol, quantity);
+            console.log(`OP BBS EM ${candidate.buy1.symbol} > ${candidate.buy2.symbol} > ${candidate.sell1.symbol} = ${crossRate}`);
+
+
+            try {
+                let quantity = parseFloat(process.env.AMOUNT / priceBuy1);
+                quantity = formatNumber(quantity, candidate.buy1.quantityPrecision);
+            
+                // Compra do primeiro par
+                let buy1Response = await binance.marketBuy(candidate.buy1.symbol.toString(), quantity.toString());
+                console.log("Compra efetuada com sucesso. ID da ordem:", buy1Response.orderId);
+                
+                // Obter a quantidade comprada do primeiro par
+                let buy1ExecutedQty = parseFloat(buy1Response.executedQty);
+            
+                // Calcular a quantidade para comprar do segundo par
+                let quantitySecondPair = buy1ExecutedQty / priceBuy2;
+                quantitySecondPair = formatNumber(quantitySecondPair, candidate.buy2.quantityPrecision);
+            
+                // Compra do segundo par
+                let buy2Response = await binance.marketBuy(candidate.buy2.symbol.toString(), quantitySecondPair.toString());
+                console.log("Compra do segundo par efetuada com sucesso. ID da ordem:", buy2Response.orderId);
+            
+                // Obter a quantidade comprada do segundo par
+                let buy2ExecutedQty = parseFloat(buy2Response.executedQty);
+            
+                // Venda do segundo par
+                let sell1Response = await binance.marketSell(candidate.sell1.symbol.toString(), buy2ExecutedQty.toString());
+                console.log("Venda do segundo par efetuada com sucesso. ID da ordem:", sell1Response.orderId);
             } catch (error) {
-                console.error('Houve um erro na primeira compra :', error);
+                console.error('Houve um erro:', error); 
             }
             
+
+            
+
+
 
             //####################################################################################
-
-            //const quantidadeOutraMoeda = Math.floor(btcAmount / stepSize); // Arredonda para baixo para garantir que seja um número inteiro
-            try {
             //Realiza a segunda compra com o saldo da primeira compra.
-            quantity = Math.round(quantity / priceBuy2) * candidate.buy2.quantityPrecision;
-            await binance.marketBuy(candidate.buy2.symbol, quantity);
-            console.log("Segunda compra realizada com sucesso !", candidate.buy2.symbol, "TOTAL de :" + quantity );
-            //await stream.execute_purchase_order(candidate.buy2.symbol, balance);
-            } catch (error) {
-                console.error('Houve um erro na segunda compra :', error);
-            }
+            // let quantity2;
+            // try {
+                
+                
+            //     quantity2 = parseFloat(quantity / priceBuy2);
+            //     quantity2 = formatNumber(quantity2, candidate.buy2.quantityPrecision); // deixa no padrao    
 
+            //     teste2 = Number(candidate.buy2.minNotional);
+            //     if(quantity2 < teste2){
+            //         console.log("TOTAL menor q notional");
+            //         process.exit(0);
+            //     }
+
+            //     await binance.marketBuy(candidate.buy2.symbol, quantity2.toString());
+            //     console.log("Segunda compra realizada com sucesso !", candidate.buy2.symbol + "Foi comprado o total de :" + quantity2, typeof(quantity2));
+            // } catch (error) {
+            //     console.error('Houve um erro na segunda compra  2:', error);
+            // }
+            
 
             //#####################################################################################
+            //Realiza a venda com o saldo da segunda compra.
+            // let quantity3;
+            // try {
+            //     quantity3 = parseFloat(quantity2 * priceSell1);
+            //     console.log("minimo notional : ", Number(candidate.sell1.minNotional));
+            //     quantity3 = formatNumber(quantity3, candidate.sell1.quantityPrecision); // deixa no padrao   
+            //     console.log("Total que esta sendo vendido :", quantity3);
 
-            try {
-                //Realiza a ultima venda.
-                quantity = Math.floor(quantity);
-                console.log("Vendendo no par",candidate.sell1.symbol, "quantidade de :",  quantity);
-                console.log("Min LOTSIZE: ", candidate.sell1.minLotSize);
-                console.log("QntdPrecision : ", candidate.sell1.quantityPrecision);
-                await binance.marketSell(candidate.sell1.symbol, quantity);
-                console.log("Venda realizado com sucesso !", candidate.sell1.symbol, "TOTAL de :" + quantity );
-                } catch (error) {
-                    console.error('Houve um erro na venda compra :', error);
-                }
-                //process.exit(0);
-                
+            //     teste3 = Number(candidate.sell1.minNotional);
+
+            //     if(quantity3 < teste3){
+            //         console.log("TOTAL menor q notional");
+            //         process.exit(0);
+            //     }
+            //     //process.exit(0);
+            //     await binance.marketSell(candidate.sell1.symbol, quantity3.toString());
+            //     console.log("Venda realizado com sucesso !", candidate.sell1.symbol, "TOTAL de :" + quantity3, typeof(quantity3));
+            // } catch (error) {
+            //     console.error('Houve um erro na venda compra 3:', error);
+            // }
+
+
         }
     }
-    
+
 }
 
 
 function processBuySellSell(buySellSell) {
-    
-    
+
+
 
     for (let i = 0; i < buySellSell.length; i++) {
         const candidate = buySellSell[i];
@@ -167,7 +210,7 @@ function processBuySellSell(buySellSell) {
         //se tem o preço dos 3, pode analisar a lucratividade
         const crossRate = (1 / priceBuy1) * priceSell1 * priceSell2;
         if (crossRate > PROFITABILITY) {
-            
+
             console.log(`OPERAÇÃO BSS EM ${candidate.buy1.symbol} > ${candidate.sell1.symbol} > ${candidate.sell2.symbol} = ${crossRate}`);
             console.log(`Investindo ${QUOTE}${AMOUNT}, retorna ${QUOTE}${((AMOUNT / priceBuy1) * priceSell1) * priceSell2}`);
 
@@ -180,7 +223,7 @@ function processBuySellSell(buySellSell) {
 
 async function start() {
 
-   
+
 
     //pega todas moedas que estão sendo negociadas
     console.log('Loading Exchange Info...');
@@ -201,7 +244,7 @@ async function start() {
     const buySellSell = getBuySellSell(buySymbols, allSymbols, symbolsMap);
     console.log('There are ' + buySellSell.length + " pairs that we can do BSS");
 
-    setInterval(async () => {       
+    setInterval(async () => {
 
         console.log(new Date());
         processBuyBuySell(buyBuySell);
