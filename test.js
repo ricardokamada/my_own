@@ -22,7 +22,7 @@ function formatNumber(value, step_size) {
 
 teste_func = formatNumber(1500.59887, 0.0001);
 
-console.log("-------", teste_func);
+//console.log("-------", teste_func);
 
 
 // const symbol = 'BTCUSDT'; // Substitua 'BTCUSDT' pelo par de negociação desejado
@@ -73,6 +73,24 @@ async function getSymbolBalance(symbol) {
 }
 
 
+
+function adjustStepSize(qty, min, max, step_size) {
+    // Ajuste a quantidade para que ela esteja de acordo com as regras de LOT_SIZE
+    qty = Math.max(qty, min); // A quantidade não pode ser menor que min
+    qty = Math.min(qty, max); // A quantidade não pode ser maior que max
+    qty = Math.floor(qty / step_size) * step_size; // A quantidade deve ser um múltiplo de step_size
+
+    // Determine o número de casas decimais do step_size
+    let decimalPlaces = (step_size.toString().split('.')[1] || []).length;
+
+    return qty.toFixed(decimalPlaces); // Ajusta a quantidade para ter o número correto de casas decimais
+}
+
+
+let myOwn = adjustStepSize(10.8876, 1, 80, 0.01);
+console.log(myOwn);
+
+
 //binance.marketSell("BTCUSDT" , 0.0041);
 
 // function comprarMercado(symbol, quantity) {
@@ -90,6 +108,7 @@ async function getSymbolBalance(symbol) {
 async function x() {
     try {
         let a = await getSymbolBalance("USDT");
+        a = formatNumber(Number(a), 0.01)
         console.log(a);
 
 
@@ -100,6 +119,9 @@ async function x() {
 
 
 x();
+
+
+
 
 //binance.marketSell("BTCUSDT", 1.0414);
 
