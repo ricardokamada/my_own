@@ -12,7 +12,7 @@ async function exchangeInfo() {
         base: s.baseAsset,
         quote:s.quoteAsset,
         minLotSize: parseFloat(s.filters.find(f => f.filterType === 'LOT_SIZE').minQty),
-        quantityPrecision: s.filters.find(f => f.filterType === 'LOT_SIZE').stepSize,
+        //quantityPrecision: parseFloat(s.filters.find(f => f.filterType === 'LOT_SIZE').quantityPrecision),
         stepSize: parseFloat(s.filters.find(filter => filter.filterType === 'LOT_SIZE').stepSize),
         minNotional: parseFloat(s.filters.find(f => f.filterType === 'NOTIONAL').minNotional),        
         tickSize: parseFloat(s.filters.find(filter => filter.filterType === 'PRICE_FILTER').tickSize),

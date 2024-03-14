@@ -66,8 +66,15 @@ function getSymbolMap(symbols) {
 
 
 function formatNumber(value, step_size) {
+    // Verifica se o valor é um número
+    if (typeof value !== 'number') {
+        console.error('Erro: o valor deve ser um número');
+        return;
+    }
+
     // Calcula o número de casas decimais com base em step_size
     const decimalPlaces = Math.max(0, -Math.floor(Math.log10(step_size)));
+
     // Formata o número com o número correto de casas decimais
     return value.toFixed(decimalPlaces);
 }
@@ -97,60 +104,29 @@ async function processBuyBuySell(buyBuySell) {
 
         //se tem o preço dos 3, pode analisar a lucratividade
         const crossRate = (1 / priceBuy1) * (1 / priceBuy2) * priceSell1;
+
+
+        let quantity_buy1, buy1Response, quantity_buy2, buy2Response, sell1Response = 0;
+
+
+
         if (crossRate > PROFITABILITY) {
 
-            let quantity_buy1, buy1Response, buy1ExecutedQty, quantity_buy2, buy2Response, buy2ExecutedQty, quantity_sell1, sell1Response = 0;
+
 
             console.log(`OP BBS EM ${candidate.buy1.symbol} > ${candidate.buy2.symbol} > ${candidate.sell1.symbol} = ${crossRate}`);
+            quantity_buy1 = process.env.AMOUNT / priceBuy1;
+            quantity_buy1 = formatNumber(quantity_buy1, candidate.buy1.stepSize);
+            buy1Response = await binance.marketBuy(candidate.buy1.symbol.toString(), quantity_buy1.toString());
+            console.log(`Compra de ${candidate.buy1.base} efetuada com sucesso. Total comprado de  : ${buy1Response.executedQty}`);
+            quantity_buy2 = formatNumber((buy1Response.executedQty / priceBuy2), candidate.buy2.stepSize);
+            buy2Response = await binance.marketBuy(candidate.buy2.symbol.toString(), quantity_buy2.toString());
+            console.log(`Compra de ${candidate.buy2.base} efetuada com sucesso. Total comprado de  : ${buy2Response.executedQty}`);
+            //VENDA VENDA VENDA #####################################################################
+            sell1Response = await binance.marketSell(candidate.sell1.symbol, quantity_buy2.toString());
+            console.log(`Venda de ${candidate.sell1.base} efetuada com sucesso. Total vendido de  : ${sell1Response.executedQty}`);
 
-            quantity_buy1 = process.env.AMOUNT;
-
-            try {
-                if ((quantity_buy1 / priceBuy1) > candidate.buy1.minNotional) {
-                    quantity_buy1 = parseFloat(process.env.AMOUNT / priceBuy1);
-                    quantity_buy1 = formatNumber(quantity_buy1, candidate.buy1.quantityPrecision);
-
-                    // Compra do primeiro par
-                    buy1Response = await binance.marketBuy(candidate.buy1.symbol.toString(), quantity_buy1.toString());
-                    console.log(`Compra de ${candidate.buy1.base} efetuada com sucesso. Total comprado de  : ${buy1Response.executedQty}`);
-                } else {
-                    console.log("Valor menor que nocional (1) ");
-                }
-            } catch (error) {
-                console.error('Houve um erro na compra do primeiro par:', error);
-            }
-
-
-            try {
-                // Calcular a quantidade para comprar do segundo par e / Arredondar a quantidade e o preço para a precisão correta
-                quantity_buy2 = Math.floor(buy1Response.executedQty / priceBuy2) * candidate.buy2.stepSize;
-                if (quantity_buy2 * priceBuy2 > candidate.buy2.minNotional) {
-                    buy2Response = await binance.marketBuy(candidate.buy2.symbol.toString(), quantity_buy2.toString());
-                    console.log(`Compra de ${candidate.buy2.base} efetuada com sucesso. Total comprado de  : ${buy2Response.executedQty}`);
-                } else {
-                    console.log("Valor menor que nocional (2) ");
-                }
-            } catch (error) {
-                console.error('Houve um erro na segunda operação de compra :', error);
-            }
-
-            try {
-
-                //Calcula a qntda a ser vendida
-                quantity_sell1 = Math.floor(buy2Response.executedQty / candidate.sell1.stepSize) * candidate.sell1.stepSize;
-                if (quantity_sell1 * priceBuy2 < candidate.sell1.minNotional) {
-                    console.log("Valor menor que nocional (3) ");
-                }else{
-
-                }
-                break;
-                //sell1Response = await binance.marketSell(candidate.sell1.symbol.toString(), quantity_sell1.toString());
-                console.log(`Venda de ${candidate.sell1.base} efetuada com sucesso. Total comprado de  : ${sell1Response.executedQty}`);
-
-            } catch (error) {
-                console.error('Houve um erro na operação de venda :', error);
-            }
-
+            break;
 
         }
     }

@@ -12,7 +12,17 @@ const binance = new Binance().options({
   }
 });
 
+function formatNumber(value, step_size) {
+    // Calcula o número de casas decimais com base em step_size
+    const decimalPlaces = Math.max(0, -Math.floor(Math.log10(step_size)));
+    // Formata o número com o número correto de casas decimais
+    return value.toFixed(decimalPlaces);
+}
 
+
+teste_func = formatNumber(1500.59887, 0.0001);
+
+console.log("-------", teste_func);
 
 
 // const symbol = 'BTCUSDT'; // Substitua 'BTCUSDT' pelo par de negociação desejado
