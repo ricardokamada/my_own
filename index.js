@@ -85,12 +85,12 @@ function adjustStepSize(qty, min, max, step_size) {
     // Ajuste a quantidade para que ela esteja de acordo com as regras de LOT_SIZE
     qty = Math.max(qty, min); // A quantidade não pode ser menor que min
     qty = Math.min(qty, max); // A quantidade não pode ser maior que max
-    qty = Math.floor(qty / step_size) * step_size; // A quantidade deve ser um múltiplo de step_size
 
     // Determine o número de casas decimais do step_size
     let decimalPlaces = (step_size.toString().split('.')[1] || []).length;
 
-    return qty.toFixed(decimalPlaces); // Ajusta a quantidade para ter o número correto de casas decimais
+    // Ajusta a quantidade para ter o número correto de casas decimais
+    return parseFloat(qty.toFixed(decimalPlaces));
 }
 
 async function processBuyBuySell(buyBuySell) {
@@ -182,6 +182,7 @@ async function processBuyBuySell(buyBuySell) {
                     console.log('Tentando novamente a venda...');
                 }
             }
+            process.exit(0);
         }
         
     }
@@ -246,17 +247,15 @@ async function start() {
     const buySellSell = getBuySellSell(buySymbols, allSymbols, symbolsMap);
     console.log('There are ' + buySellSell.length + " pairs that we can do BSS");
 
-    const processAndScheduleNext = async () => {
+
+    setInterval(async () => {
+
         console.log(new Date());
-        await processBuyBuySell(buyBuySell);
+        processBuyBuySell(buyBuySell);
         //processBuySellSell(buySellSell);
 
-        // Agende a próxima execução depois que a atual terminar
-        setTimeout(processAndScheduleNext, INTERVAL);
-    };
 
-    // Inicie a primeira execução
-    processAndScheduleNext();
+    }, INTERVAL)
 }
 
 start();

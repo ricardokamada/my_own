@@ -87,8 +87,8 @@ function adjustStepSize(qty, min, max, step_size) {
 }
 
 
-let myOwn = adjustStepSize(10.8876, 1, 80, 0.01);
-console.log(myOwn);
+// let myOwn = adjustStepSize(4.7, 0.0001, 80, 0.00001);
+// console.log(myOwn);
 
 
 //binance.marketSell("BTCUSDT" , 0.0041);
