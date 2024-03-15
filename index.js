@@ -81,17 +81,20 @@ function getSymbolMap(symbols) {
 
 //console.log(formatNumber(value, step_size)); // Saída: 123.46
 
-function adjustStepSize(qty, min, max, step_size) {
+function adjustStepSize(qty, min_val, max_val, step_size) {
     // Ajuste a quantidade para que ela esteja de acordo com as regras de LOT_SIZE
-    qty = Math.max(qty, min); // A quantidade não pode ser menor que min
-    qty = Math.min(qty, max); // A quantidade não pode ser maior que max
+    qty = Math.max(qty, min_val);  // A quantidade não pode ser menor que min_val
+    qty = Math.min(qty, max_val);  // A quantidade não pode ser maior que max_val
 
     // Determine o número de casas decimais do step_size
     let decimalPlaces = (step_size.toString().split('.')[1] || []).length;
 
     // Ajusta a quantidade para ter o número correto de casas decimais
-    return parseFloat(qty.toFixed(decimalPlaces));
+    // Use a função Math.floor() em vez de round() para evitar arredondamento
+    let trunc_modifier = Math.pow(10, decimalPlaces);
+    return Math.floor(qty * trunc_modifier) / trunc_modifier;
 }
+
 
 async function processBuyBuySell(buyBuySell) {
     for (let i = 0; i < buyBuySell.length; i++) {
@@ -119,7 +122,7 @@ async function processBuyBuySell(buyBuySell) {
 
 
 
-        if (crossRate > PROFITABILITY) {
+        if (crossRate >= PROFITABILITY) {
             console.log(`OP BBS EM ${candidate.buy1.symbol} > ${candidate.buy2.symbol} > ${candidate.sell1.symbol} = ${crossRate}`);
             quantity_buy1 = process.env.AMOUNT / priceBuy1;
             quantity_buy1 = adjustStepSize(quantity_buy1, candidate.buy1.minLotSize, candidate.buy1.maxLotSize, candidate.buy1.stepSize);
@@ -184,10 +187,11 @@ async function processBuyBuySell(buyBuySell) {
                 }
             }
 
-            //await new Promise(resolve => setTimeout(resolve, intervalBetweenOrders)); // Aguarde o próximo intervalo
+            //await new Promise(resolve => setTimeout(resolve, 5000)); // Aguarde o próximo intervalo
+            //process.exit(0);
             return;
             
-            //process.exit(0);
+            
         }
         
     }

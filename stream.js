@@ -44,7 +44,7 @@ async function getSymbolBalance(symbol) {
         // Verifique se o símbolo existe nos saldos retornados
         if (balances[symbol]) {
             // Se o símbolo existir, retorne o saldo correspondente
-            return balances[symbol].available;
+            return parseFloat(balances[symbol].available);
         } else {
             // Se o símbolo não existir, lance um erro
             throw new Error("Symbol not found in balances");
