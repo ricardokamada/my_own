@@ -125,6 +125,7 @@ async function processBuyBuySell(buyBuySell) {
             quantity_buy1 = adjustStepSize(quantity_buy1, candidate.buy1.minLotSize, candidate.buy1.maxLotSize, candidate.buy1.stepSize);
         
             let maxAttempts = 3; // Número máximo de tentativas
+            const intervalBetweenOrders = 1000; // 1 segundos em milissegundos
         
             // Primeira compra
             let attempts = 0; // Contador de tentativas
@@ -182,7 +183,11 @@ async function processBuyBuySell(buyBuySell) {
                     console.log('Tentando novamente a venda...');
                 }
             }
-            process.exit(0);
+
+            //await new Promise(resolve => setTimeout(resolve, intervalBetweenOrders)); // Aguarde o próximo intervalo
+            return;
+            
+            //process.exit(0);
         }
         
     }
@@ -223,7 +228,6 @@ function processBuySellSell(buySellSell) {
 
 
 
-
 async function start() {
 
 
@@ -246,6 +250,7 @@ async function start() {
     //descobre todos os pares que podem triangular BUY-SELL-SELL
     const buySellSell = getBuySellSell(buySymbols, allSymbols, symbolsMap);
     console.log('There are ' + buySellSell.length + " pairs that we can do BSS");
+
 
 
     setInterval(async () => {

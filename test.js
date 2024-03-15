@@ -123,6 +123,11 @@ x();
 
 
 
+
+
+// Repita o mesmo processo para a segunda compra
+
+
 //binance.marketSell("BTCUSDT", 1.0414);
 
 
