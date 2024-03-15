@@ -1,16 +1,28 @@
 require('dotenv').config();
-
 const Binance = require('node-binance-api');
 const binance = new Binance().options({
-  APIKEY: 'qLiJoXnyeiffZYqEcbzQ6pSZKHGWbfYcpntISLU04godqHvokNH4RBgN0rMWqkJI',
-  APISECRET: 'ABPzh0iq3pjhYlFE3XjcYEmkXTITdI8qJjNX3vISD91wpyAPAp7Ln4HUKH9iSOtV',
-  recvWindow: 60000,
-  family: 0,
-  urls: {
-    base: "https://testnet.binance.vision/api/",
+    APIKEY: process.env.APIKEY,
+    APISECRET: process.env.APISECRET,
+    useServerTime: true,
+  });
+  
+OP BBS EM BTCUSDT > DOCKBTC > DOCKUSDT = 1.0046322839561446
+Compra de BTC efetuada com sucesso. Total comprado de  : 0.00014000
+Erro ao comprar DOCK: {"statusCode":400,"body":"{\"code\":-2010,\"msg\":\"Account has insufficient balance for requested action.\"}","headers":{"content-type":"application/json;charset=UTF-8","content-length":"77","connection":"keep-alive","date":"Fri, 15 Mar 2024 00:25:32 GMT","server":"nginx","x-mbx-uuid":"e05bd18d-a8d2-4ff9-8d75-3ce9a26b5b7d","x-mbx-used-weight":"23","x-mbx-used-weight-1m":"23","x-mbx-order-count-10s":"1","x-mbx-order-count-1d":"1","strict-transport-security":"max-age=31536000; includeSubdomains","x-frame-options":"SAMEORIGIN","x-xss-protection":"1; mode=block","x-content-type-options":"nosniff","content-security-policy":"default-src 'self'","x-content-security-policy":"default-src 'self'","x-webkit-csp":"default-src 'self'","cache-control":"no-cache, no-store, must-revalidate","pragma":"no-cache","expires":"0","x-cache":"Error from cloudfront","via":"1.1 f2efda1c6a986496720754c7fee772de.cloudfront.net (CloudFront)","x-amz-cf-pop":"GRU1-P1","x-amz-cf-id":"C51pjMlaSxyeZ_c_4VMFHxyOaEOpd-lMYYD0ens0XAn5FtiNCDh95A=="},"request":{"uri":{"protocol":"https:","slashes":true,"auth":null,"host":"api.binance.com","port":443,"hostname":"api.binance.com","hash":null,"search":null,"query":null,"pathname":"/api/v3/order","path":"/api/v3/order","href":"https://api.binance.com/api/v3/order"},"method":"POST","headers":{"User-Agent":"Mozilla/4.0 (compatible; Node Binance API)","Content-type":"application/x-www-form-urlencoded","X-MBX-APIKEY":"zkkOZ6p390Uxqpx7tTJnN1S1PgpM1a1HKkIr2QAzg4YHddJLBc14xbWsurBdbptO","content-length":163}}}
+Tentando novamente a compra...
 
-  }
-});
+
+// const Binance = require('node-binance-api');
+// const binance = new Binance().options({
+//   APIKEY: 'qLiJoXnyeiffZYqEcbzQ6pSZKHGWbfYcpntISLU04godqHvokNH4RBgN0rMWqkJI',
+//   APISECRET: 'ABPzh0iq3pjhYlFE3XjcYEmkXTITdI8qJjNX3vISD91wpyAPAp7Ln4HUKH9iSOtV',
+//   recvWindow: 60000,
+//   family: 0,
+//   urls: {
+//     base: "https://testnet.binance.vision/api/",
+
+//   }
+// });
 
 function formatNumber(value, step_size) {
     // Calcula o número de casas decimais com base em step_size
