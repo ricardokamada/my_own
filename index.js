@@ -145,6 +145,7 @@ function processBuyBuySell(buyBuySell) {
                         attempts++;
                         buy1Response = await binance.marketBuy(candidate.buy1.symbol.toString(), quantity_buy1.toString());
                         console.log(`Compra de ${candidate.buy1.base} efetuada com sucesso. Total comprado de  : ${buy1Response.executedQty}`);
+                        quantity_buy2 = buy1Response.executedQty;
                         break; // Se a operação for bem-sucedida, saia do loop
                     } catch (error) {
                         console.error(`Erro ao comprar ${candidate.buy1.base}: ${JSON.stringify(error)}`);
@@ -158,12 +159,13 @@ function processBuyBuySell(buyBuySell) {
 
                 // Segunda compra
                 attempts = 0; // Redefina o contador de tentativas
-                quantity_buy2 = adjustStepSize((buy1Response.executedQty / priceBuy2), candidate.buy2.minLotSize, candidate.buy2.maxLotSize, candidate.buy2.stepSize);
+                quantity_buy2 = adjustStepSize((quantity_buy2 / priceBuy2), candidate.buy2.minLotSize, candidate.buy2.maxLotSize, candidate.buy2.stepSize);
                 while (attempts < maxAttempts) {
                     try {
                         attempts++;
                         buy2Response = await binance.marketBuy(candidate.buy2.symbol.toString(), quantity_buy2.toString());
                         console.log(`Compra de ${candidate.buy2.base} efetuada com sucesso. Total comprado de  : ${buy2Response.executedQty}`);
+                        quantity_buy2 = buy2Response.executedQty;
                         break; // Se a operação for bem-sucedida, saia do loop
                     } catch (error) {
                         console.error(`Erro ao comprar ${candidate.buy2.base}: ${JSON.stringify(error)}`);
@@ -182,7 +184,7 @@ function processBuyBuySell(buyBuySell) {
                         attempts++;
                         quantity_buy2 = adjustStepSize(quantity_buy2, candidate.sell1.minLotSize, candidate.sell1.maxLotSize, candidate.sell1.stepSize);
                         //VENDA VENDA VENDA #####################################################################
-                        sell1Response = await binance.marketSell(candidate.sell1.symbol, quantity_buy2.toString());
+                        sell1Response = await binance.marketSell(candidate.sell1.symbol.toString(), quantity_buy2.toString());
                         console.log(`Venda de ${candidate.sell1.base} efetuada com sucesso. Total vendido de  : ${sell1Response.executedQty}`);
                         break; // Se a venda for bem-sucedida, saia do loop
                     } catch (error) {
