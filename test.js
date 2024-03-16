@@ -12,6 +12,11 @@ require('dotenv').config();
 // Tentando novamente a compra...
 
 
+//error para resolver:
+//Erro ao comprar CELR: {"statusCode":429,"body":"{\"code\":-1015,\"msg\":\"Too many new orders; current limit is 50 orders per 10 SECOND.\"}"
+//\"code\":-1100,\"msg\":\"Illegal characters found in parameter 'timestamp'; legal range is '^[
+//{\"code\":-2010,\"msg\":\"Account has insufficient balance for requested action.\
+
 const Binance = require('node-binance-api');
 const binance = new Binance().options({
   APIKEY: 'qLiJoXnyeiffZYqEcbzQ6pSZKHGWbfYcpntISLU04godqHvokNH4RBgN0rMWqkJI',
@@ -116,19 +121,19 @@ function adjustStepSize(qty, min, max, step_size) {
 
 
 
-binance.marketSell('BTCUSDT', 0.01473, (error, response) => {
-    if (response){
-        console.log("Sussefufly !", response.orderId);
-    }
-});
+// binance.marketSell('BTCUSDT', 0.01473, (error, response) => {
+//     if (response){
+//         console.log("Sussefuly !", response.orderId);
+//     }
+// });
 
 
 async function x() {
     try {
-        let a = await getSymbolBalance("USDT");
+        let balance = await getSymbolBalance("USDT");
         
-        console.log(a, typeof(a));
 
+        console.log("Sussefuly !", balance);
 
     } catch (error) {
         console.error("Erro ao obter saldo:", error);

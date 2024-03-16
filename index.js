@@ -96,7 +96,10 @@ function adjustStepSize(qty, min_val, max_val, step_size) {
 }
 
 
-async function processBuyBuySell(buyBuySell) {
+function processBuyBuySell(buyBuySell) {
+
+
+
     for (let i = 0; i < buyBuySell.length; i++) {
         const candidate = buyBuySell[i];
 
@@ -123,78 +126,90 @@ async function processBuyBuySell(buyBuySell) {
 
 
         if (crossRate >= PROFITABILITY) {
-            console.log(`OP BBS EM ${candidate.buy1.symbol} > ${candidate.buy2.symbol} > ${candidate.sell1.symbol} = ${crossRate}`);
-            quantity_buy1 = process.env.AMOUNT / priceBuy1;
-            quantity_buy1 = adjustStepSize(quantity_buy1, candidate.buy1.minLotSize, candidate.buy1.maxLotSize, candidate.buy1.stepSize);
-        
-            let maxAttempts = 3; // Número máximo de tentativas
-            const intervalBetweenOrders = 1000; // 1 segundos em milissegundos
-        
-            // Primeira compra
-            let attempts = 0; // Contador de tentativas
-            while (attempts < maxAttempts) {
-                try {
-                    attempts++;
-                    buy1Response = await binance.marketBuy(candidate.buy1.symbol.toString(), quantity_buy1.toString());
-                    console.log(`Compra de ${candidate.buy1.base} efetuada com sucesso. Total comprado de  : ${buy1Response.executedQty}`);
-                    break; // Se a operação for bem-sucedida, saia do loop
-                } catch (error) {
-                    console.error(`Erro ao comprar ${candidate.buy1.base}: ${JSON.stringify(error)}`);
-                    if (attempts === maxAttempts) {
-                        console.error('Número máximo de tentativas atingido. Interrompendo a execução.');
-                        throw error; // Se o número máximo de tentativas for atingido, lance o erro e interrompa a execução
+
+            (async () => {
+
+
+
+                console.log(`OP BBS EM ${candidate.buy1.symbol} > ${candidate.buy2.symbol} > ${candidate.sell1.symbol} = ${crossRate}`);
+                quantity_buy1 = process.env.AMOUNT / priceBuy1;
+                quantity_buy1 = adjustStepSize(quantity_buy1, candidate.buy1.minLotSize, candidate.buy1.maxLotSize, candidate.buy1.stepSize);
+
+                let maxAttempts = 3; // Número máximo de tentativas
+                const intervalBetweenOrders = 1000; // 1 segundos em milissegundos
+
+                // Primeira compra
+                let attempts = 0; // Contador de tentativas
+                while (attempts < maxAttempts) {
+                    try {
+                        attempts++;
+                        buy1Response = await binance.marketBuy(candidate.buy1.symbol.toString(), quantity_buy1.toString());
+                        console.log(`Compra de ${candidate.buy1.base} efetuada com sucesso. Total comprado de  : ${buy1Response.executedQty}`);
+                        break; // Se a operação for bem-sucedida, saia do loop
+                    } catch (error) {
+                        console.error(`Erro ao comprar ${candidate.buy1.base}: ${JSON.stringify(error)}`);
+                        if (attempts === maxAttempts) {
+                            console.error('Número máximo de tentativas atingido. Interrompendo a execução.');
+                            throw error; // Se o número máximo de tentativas for atingido, lance o erro e interrompa a execução
+                        }
+                        console.log('Tentando novamente a compra...');
                     }
-                    console.log('Tentando novamente a compra...');
                 }
-            }
-        
-            // Segunda compra
-            attempts = 0; // Redefina o contador de tentativas
-            quantity_buy2 = adjustStepSize((buy1Response.executedQty / priceBuy2), candidate.buy2.minLotSize, candidate.buy2.maxLotSize, candidate.buy2.stepSize);
-            while (attempts < maxAttempts) {
-                try {
-                    attempts++;
-                    buy2Response = await binance.marketBuy(candidate.buy2.symbol.toString(), quantity_buy2.toString());
-                    console.log(`Compra de ${candidate.buy2.base} efetuada com sucesso. Total comprado de  : ${buy2Response.executedQty}`);
-                    break; // Se a operação for bem-sucedida, saia do loop
-                } catch (error) {
-                    console.error(`Erro ao comprar ${candidate.buy2.base}: ${JSON.stringify(error)}`);
-                    if (attempts === maxAttempts) {
-                        console.error('Número máximo de tentativas atingido. Interrompendo a execução.');
-                        throw error; // Se o número máximo de tentativas for atingido, lance o erro e interrompa a execução
+
+                // Segunda compra
+                attempts = 0; // Redefina o contador de tentativas
+                quantity_buy2 = adjustStepSize((buy1Response.executedQty / priceBuy2), candidate.buy2.minLotSize, candidate.buy2.maxLotSize, candidate.buy2.stepSize);
+                while (attempts < maxAttempts) {
+                    try {
+                        attempts++;
+                        buy2Response = await binance.marketBuy(candidate.buy2.symbol.toString(), quantity_buy2.toString());
+                        console.log(`Compra de ${candidate.buy2.base} efetuada com sucesso. Total comprado de  : ${buy2Response.executedQty}`);
+                        break; // Se a operação for bem-sucedida, saia do loop
+                    } catch (error) {
+                        console.error(`Erro ao comprar ${candidate.buy2.base}: ${JSON.stringify(error)}`);
+                        if (attempts === maxAttempts) {
+                            console.error('Número máximo de tentativas atingido. Interrompendo a execução.');
+                            throw error; // Se o número máximo de tentativas for atingido, lance o erro e interrompa a execução
+                        }
+                        console.log('Tentando novamente a compra...');
                     }
-                    console.log('Tentando novamente a compra...');
                 }
-            }
-        
-            // Venda
-            attempts = 0; // Redefina o contador de tentativas
-            while (attempts < maxAttempts) {
-                try {
-                    attempts++;
-                    quantity_buy2 = adjustStepSize(quantity_buy2, candidate.sell1.minLotSize, candidate.sell1.maxLotSize, candidate.sell1.stepSize);
-                    //VENDA VENDA VENDA #####################################################################
-                    sell1Response = await binance.marketSell(candidate.sell1.symbol, quantity_buy2.toString());
-                    console.log(`Venda de ${candidate.sell1.base} efetuada com sucesso. Total vendido de  : ${sell1Response.executedQty}`);
-                    break; // Se a venda for bem-sucedida, saia do loop
-                } catch (error) {
-                    console.error(`Erro ao vender ${candidate.sell1.base}: ${JSON.stringify(error)}`);
-                    if (attempts === maxAttempts) {
-                        console.error('Número máximo de tentativas atingido. Interrompendo a execução.');
-                        throw error; // Se o número máximo de tentativas for atingido, lance o erro e interrompa a execução
+
+                // Venda
+                attempts = 0; // Redefina o contador de tentativas
+                while (attempts < maxAttempts) {
+                    try {
+                        attempts++;
+                        quantity_buy2 = adjustStepSize(quantity_buy2, candidate.sell1.minLotSize, candidate.sell1.maxLotSize, candidate.sell1.stepSize);
+                        //VENDA VENDA VENDA #####################################################################
+                        sell1Response = await binance.marketSell(candidate.sell1.symbol, quantity_buy2.toString());
+                        console.log(`Venda de ${candidate.sell1.base} efetuada com sucesso. Total vendido de  : ${sell1Response.executedQty}`);
+                        break; // Se a venda for bem-sucedida, saia do loop
+                    } catch (error) {
+                        console.error(`Erro ao vender ${candidate.sell1.base}: ${JSON.stringify(error)}`);
+                        if (attempts === maxAttempts) {
+                            console.error('Número máximo de tentativas atingido. Interrompendo a execução.');
+                            throw error; // Se o número máximo de tentativas for atingido, lance o erro e interrompa a execução
+                        }
+                        console.log('Tentando novamente a venda...');
                     }
-                    console.log('Tentando novamente a venda...');
                 }
-            }
+
+                
+
+            })(); 
+            
+            break;
+
 
             //await new Promise(resolve => setTimeout(resolve, 5000)); // Aguarde o próximo intervalo
             //process.exit(0);
-            return;
-            
-            
+            //return;
+
+
         }
-        
-    }
+
+    } return;
 
 }
 
@@ -233,8 +248,6 @@ function processBuySellSell(buySellSell) {
 
 
 async function start() {
-
-
 
     //pega todas moedas que estão sendo negociadas
     console.log('Loading Exchange Info...');

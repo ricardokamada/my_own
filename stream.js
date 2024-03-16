@@ -5,20 +5,25 @@ require('dotenv').config();
 
 
 async function exchangeInfo() {
-    data =  await binance.exchangeInfo() 
-    return data.symbols.filter(s => s.status === 'TRADING').map(s => {
-      return {
-        symbol: s.symbol,
-        base: s.baseAsset,
-        quote:s.quoteAsset,
-        minLotSize: parseFloat(s.filters.find(f => f.filterType === 'LOT_SIZE').minQty),
-        maxLotSize: parseFloat(s.filters.find(f => f.filterType === 'LOT_SIZE').maxQty),
-        stepSize: parseFloat(s.filters.find(filter => filter.filterType === 'LOT_SIZE').stepSize),
-        minNotional: parseFloat(s.filters.find(f => f.filterType === 'NOTIONAL').minNotional),        
-        tickSize: parseFloat(s.filters.find(filter => filter.filterType === 'PRICE_FILTER').tickSize),
-      }
-    })
-  }
+    try {
+        data = await binance.exchangeInfo()
+        return data.symbols.filter(s => s.status === 'TRADING').map(s => {
+            return {
+                symbol: s.symbol,
+                base: s.baseAsset,
+                quote: s.quoteAsset,
+                minLotSize: parseFloat(s.filters.find(f => f.filterType === 'LOT_SIZE').minQty),
+                maxLotSize: parseFloat(s.filters.find(f => f.filterType === 'LOT_SIZE').maxQty),
+                stepSize: parseFloat(s.filters.find(filter => filter.filterType === 'LOT_SIZE').stepSize),
+                minNotional: parseFloat(s.filters.find(f => f.filterType === 'NOTIONAL').minNotional),
+                tickSize: parseFloat(s.filters.find(filter => filter.filterType === 'PRICE_FILTER').tickSize),
+            }
+        });
+    } catch (error) {
+        console.log("ERROR em exchangeInfo()", error);
+        throw error; 
+    }
+}
 
 
 const BOOK = {};
@@ -36,7 +41,7 @@ function getBook(symbol) {
 // Função para obter o saldo de um símbolo específico
 async function getSymbolBalance(symbol) {
 
-    
+
     try {
         // Chamada à função binance.balance() para obter todos os saldos
         const balances = await binance.balance();
@@ -55,25 +60,10 @@ async function getSymbolBalance(symbol) {
     }
 }
 
-async function execute_purchase_order(symbol, qtd) {
-    try {        
-
-        binance.marketBuy(symbol, qtd, (error, response) => {
-            if (error) {
-                console.error('An error occurred while making the purchase:', error);
-            } else {
-                console.log(`Purchase made successfully in pair : ${symbol},  qtd: ${qtd} @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@`);
-            }
-            
-        });
-    } catch (error) {
-        console.error('An error occurred while making the purchase:', error);
-    }
-}
 
 
 
 
 
 
-module.exports = { exchangeInfo, getBook , execute_purchase_order, getSymbolBalance };
+module.exports = { exchangeInfo, getBook, getSymbolBalance };
