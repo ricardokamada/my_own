@@ -96,7 +96,7 @@ function adjustStepSize(qty, min_val, max_val, step_size) {
 }
 
 
-function processBuyBuySell(buyBuySell) {
+async function processBuyBuySell(buyBuySell) {
 
 
 
@@ -104,15 +104,15 @@ function processBuyBuySell(buyBuySell) {
         const candidate = buyBuySell[i];
 
         //verifica se já temos todos os preços
-        let priceBuy1 = stream.getBook(candidate.buy1.symbol);
+        let priceBuy1 = await stream.getBook(candidate.buy1.symbol);
         if (!priceBuy1) continue;
         priceBuy1 = parseFloat(priceBuy1.price);
 
-        let priceBuy2 = stream.getBook(candidate.buy2.symbol);
+        let priceBuy2 = await stream.getBook(candidate.buy2.symbol);
         if (!priceBuy2) continue;
         priceBuy2 = parseFloat(priceBuy2.price);
 
-        let priceSell1 = stream.getBook(candidate.sell1.symbol);
+        let priceSell1 = await stream.getBook(candidate.sell1.symbol);
         if (!priceSell1) continue;
 
         priceSell1 = parseFloat(priceSell1.price);
@@ -127,7 +127,7 @@ function processBuyBuySell(buyBuySell) {
 
         if (crossRate > PROFITABILITY) {
 
-            (async () => {
+
 
                 console.log(`OP BBS EM ${candidate.buy1.symbol} > ${candidate.buy2.symbol} > ${candidate.sell1.symbol} = ${crossRate}`);
 
@@ -161,15 +161,15 @@ function processBuyBuySell(buyBuySell) {
                 }
                 }
 
-                process.exit(0);
-
-
-            })();
+                //process.exit(0);
 
 
 
 
-            //await new Promise(resolve => setTimeout(resolve, 5000)); // Aguarde o próximo intervalo
+
+
+
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Aguarde o próximo intervalo
             //process.exit(0);
 
 
