@@ -20,4 +20,6 @@ const binance = new Binance().options({
 });
 
 
+
+
 module.exports = binance;
