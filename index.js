@@ -95,6 +95,8 @@ function adjustStepSize(qty, min_val, max_val, step_size) {
     return Math.floor(qty * trunc_modifier) / trunc_modifier;
 }
 
+let isTaskRunning = false;
+
 
 async function processBuyBuySell(buyBuySell) {
 
@@ -125,51 +127,55 @@ async function processBuyBuySell(buyBuySell) {
 
         quantity_buy1 = process.env.AMOUNT;
 
-        if (crossRate > PROFITABILITY) {
+        if (crossRate > PROFITABILITY && !isTaskRunning) {
+
+            isTaskRunning = true;
 
 
+            console.log(`OP BBS EM ${candidate.buy1.symbol} > ${candidate.buy2.symbol} > ${candidate.sell1.symbol} = ${crossRate}`);
 
-                console.log(`OP BBS EM ${candidate.buy1.symbol} > ${candidate.buy2.symbol} > ${candidate.sell1.symbol} = ${crossRate}`);
+            // Primeira compra
 
-                // Primeira compra
+            try {
+                buy1Response = await binance.marketBuy(candidate.buy1.symbol.toString(), null, { quoteOrderQty: parseFloat(quantity_buy1) });
+                console.log(`Compra de ${candidate.buy1.base} efetuada com sucesso. Total comprado de  : ${buy1Response.executedQty} no preco ${priceBuy1.toFixed(8)}`);
+            } catch (error) {
+                console.error(`Erro ao comprar ${candidate.buy1.base}: ${JSON.stringify(error)}`);
+            }
 
+
+            // Segunda compra
+            if (buy1Response.status === 'FILLED') {
                 try {
-                    buy1Response = await binance.marketBuy(candidate.buy1.symbol.toString(), null, { quoteOrderQty: parseFloat(quantity_buy1) });
-                    console.log(`Compra de ${candidate.buy1.base} efetuada com sucesso. Total comprado de  : ${buy1Response.executedQty} no preco ${priceBuy1.toFixed(8)}`);
+                    buy2Response = await binance.marketBuy(candidate.buy2.symbol.toString(), null, { quoteOrderQty: buy1Response.executedQty });
+                    console.log(`Compra de ${candidate.buy2.base} efetuada com sucesso. Total comprado de  : ${buy2Response.executedQty} no preco ${priceBuy2.toFixed(8)}`);
                 } catch (error) {
-                    console.error(`Erro ao comprar ${candidate.buy1.base}: ${JSON.stringify(error)}`);
+                    console.error(`Erro ao comprar ${candidate.buy2.base}: ${JSON.stringify(error)}`);
                 }
+            }
 
-
-                // Segunda compra
-                if (buy1Response.status === 'FILLED') {
-                    try {
-                        buy2Response = await binance.marketBuy(candidate.buy2.symbol.toString(), null, { quoteOrderQty: parseFloat(buy1Response.executedQty) });
-                        console.log(`Compra de ${candidate.buy2.base} efetuada com sucesso. Total comprado de  : ${buy2Response.executedQty} no preco ${priceBuy2.toFixed(8)}`);
-                    } catch (error) {
-                        console.error(`Erro ao comprar ${candidate.buy2.base}: ${JSON.stringify(error)}`);
-                    }
-                }
-
-                // // Venda
-                if (buy2Response.status === 'FILLED') {
+            // // Venda
+            if (buy2Response.status === 'FILLED') {
                 try {
-                    sell1Response = await binance.marketSell(candidate.sell1.symbol.toString(),  parseFloat(buy2Response.executedQty) );
+                    sell1Response = await binance.marketSell(candidate.sell1.symbol.toString(), buy2Response.executedQty);
                     console.log(`Venda de ${candidate.sell1.base} efetuada com sucesso. Total vendido de  : ${sell1Response.executedQty} no preco ${priceSell1}`);
                 } catch (error) {
                     console.error(`Erro ao vender ${candidate.sell1.base}: ${JSON.stringify(error)}`);
                 }
-                }
-
-                //process.exit(0);
-
-
-
-
-
-
+            }
 
             await new Promise(resolve => setTimeout(resolve, 2000)); // Aguarde o próximo intervalo
+            isTaskRunning = false;
+            return;
+            //process.exit(0);
+
+
+
+
+            //Erro ao vender PHB: {"statusCode":400,"body":"{\"code\":-1013,\"msg\":\"Filter failure: LOT_SIZE\"}
+
+
+            
             //process.exit(0);
 
 
