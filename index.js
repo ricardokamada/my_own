@@ -127,7 +127,11 @@ async function processBuyBuySell(buyBuySell) {
 
         quantity_buy1 = process.env.AMOUNT;
 
-        if (crossRate > PROFITABILITY && !isTaskRunning) {
+        let stepSize1 = parseFloat(candidate.buy1.stepSize);
+        let stepSize2 = parseFloat(candidate.buy2.stepSize);
+        let stepSize3 = parseFloat(candidate.sell1.stepSize);
+
+        if (crossRate > PROFITABILITY && !isTaskRunning && stepSize2 <= stepSize1 && stepSize3 <= stepSize2) {
 
             isTaskRunning = true;
 
@@ -167,7 +171,7 @@ async function processBuyBuySell(buyBuySell) {
             await new Promise(resolve => setTimeout(resolve, 2000)); // Aguarde o próximo intervalo
             isTaskRunning = false;
             return;
-            //process.exit(0);
+            process.exit(0);
 
 
 
