@@ -62,6 +62,21 @@ async function getBestAsk(symbol) {
     });
 }
 
+// async function getBestBid(symbol) {
+//     return new Promise((resolve, reject) => {
+//         binance.websockets.bookTickers(symbol, (ticker) => {
+//             resolve(ticker.bestBid);          
+//         });
+//     });
+// }
+
+// async function getBestAsk(symbol) {
+//     return new Promise((resolve, reject) => {
+//         binance.websockets.bookTickers(symbol, (ticker) => {
+//             resolve(ticker.bestAsk); 
+//         });
+//     });
+// }
 
 // async function getBestBid(symbol) {
 //     return new Promise((resolve, reject) => {

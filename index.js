@@ -127,12 +127,12 @@ async function processBuyBuySell(buyBuySell) {
         let priceBuy1 = await getBestAsk(candidate.buy1.symbol);
         if (!priceBuy1) continue;
 
-        priceBuy1 = parseFloat(priceBuy1.price);
+        priceBuy1 = parseFloat(priceBuy1);
 
         let priceBuy2 = await getBestAsk(candidate.buy2.symbol);
         if (!priceBuy2) continue;
 
-        priceBuy2 = parseFloat(priceBuy2.price);
+        priceBuy2 = parseFloat(priceBuy2);
 
         let priceSell1 = await getBestBid(candidate.sell1.symbol);
         if (!priceSell1) continue;
