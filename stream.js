@@ -28,42 +28,81 @@ async function exchangeInfo() {
 
 const BOOK = {};
 
-binance.websockets.miniTicker(markets => {
-    for (let symbol in markets) {
-        BOOK[symbol] = { price: parseFloat(markets[symbol].close) };
-    }
-});
 
-function getBook(symbol) {
-    return BOOK[symbol];
+
+
+
+// async function getBestBid(symbol) {
+//     return new Promise((resolve, reject) => {
+//         binance.websockets.bookTickers(symbol, (ticker) => {
+//             resolve(ticker.bestBid);  
+//             binance.websockets.terminate(symbol);        
+//         });
+//     });
+// }
+
+async function getBestBid(symbol) {
+    return new Promise((resolve, reject) => {
+        binance.websockets.bookTickers(symbol, (ticker) => {
+            resolve(ticker.bestBid);  
+        });
+    }).then(() => {
+        binance.websockets.terminate(symbol); // Terminar a inscrição após a resolução da promessa
+    });
 }
+
+
+async function getBestAsk(symbol) {
+    return new Promise((resolve, reject) => {
+        binance.websockets.bookTickers(symbol, (ticker) => {
+            resolve(ticker.bestAsk);  
+        });
+    }).then(() => {
+        binance.websockets.terminate(symbol); // Terminar a inscrição após a resolução da promessa
+    });
+}
+
+
+// async function getBestBid(symbol) {
+//     return new Promise((resolve, reject) => {
+//         binance.websockets.bookTickers(symbol, (ticker) => {
+//             resolve(ticker.bestBid);  
+//         });
+//     }).then(() => {
+//         binance.websockets.terminate(symbol); // Terminar a inscrição após a resolução da promessa
+//     });
+// }
+
+
+
+
 
 // Função para obter o saldo de um símbolo específico
-async function getSymbolBalance(symbol) {
+// async function getSymbolBalance(symbol) {
 
 
-    try {
-        // Chamada à função binance.balance() para obter todos os saldos
-        const balances = await binance.balance();
+//     try {
+//         // Chamada à função binance.balance() para obter todos os saldos
+//         const balances = await binance.balance();
 
-        // Verifique se o símbolo existe nos saldos retornados
-        if (balances[symbol]) {
-            // Se o símbolo existir, retorne o saldo correspondente
-            return parseFloat(balances[symbol].available);
-        } else {
-            // Se o símbolo não existir, lance um erro
-            throw new Error("Symbol not found in balances");
-        }
-    } catch (error) {
-        // Em caso de erro, lance o erro
-        throw error;
-    }
-}
-
-
-
+//         // Verifique se o símbolo existe nos saldos retornados
+//         if (balances[symbol]) {
+//             // Se o símbolo existir, retorne o saldo correspondente
+//             return parseFloat(balances[symbol].available);
+//         } else {
+//             // Se o símbolo não existir, lance um erro
+//             throw new Error("Symbol not found in balances");
+//         }
+//     } catch (error) {
+//         // Em caso de erro, lance o erro
+//         throw error;
+//     }
+// }
 
 
 
 
-module.exports = { exchangeInfo, getBook, getSymbolBalance };
+
+
+
+module.exports = { exchangeInfo, getBestBid, getBestAsk };

@@ -95,6 +95,23 @@ function adjustStepSize(qty, min_val, max_val, step_size) {
     return Math.floor(qty * trunc_modifier) / trunc_modifier;
 }
 
+async function getBestBid(symbol) {
+    return new Promise((resolve, reject) => {
+        binance.websockets.bookTickers(symbol, (ticker) => {
+            resolve(ticker.bestBid);          
+        });
+    });
+}
+
+async function getBestAsk(symbol) {
+    return new Promise((resolve, reject) => {
+        binance.websockets.bookTickers(symbol, (ticker) => {
+            resolve(ticker.bestAsk); 
+        });
+    });
+}
+
+
 let isTaskRunning = false;
 
 
@@ -105,17 +122,24 @@ async function processBuyBuySell(buyBuySell) {
     for (let i = 0; i < buyBuySell.length; i++) {
         const candidate = buyBuySell[i];
 
+
         //verifica se já temos todos os preços
-        let priceBuy1 = await stream.getBook(candidate.buy1.symbol);
+        let priceBuy1 = await getBestAsk(candidate.buy1.symbol);
         if (!priceBuy1) continue;
+
         priceBuy1 = parseFloat(priceBuy1.price);
 
-        let priceBuy2 = await stream.getBook(candidate.buy2.symbol);
+        let priceBuy2 = await getBestAsk(candidate.buy2.symbol);
         if (!priceBuy2) continue;
+
         priceBuy2 = parseFloat(priceBuy2.price);
 
-        let priceSell1 = await stream.getBook(candidate.sell1.symbol);
+        let priceSell1 = await getBestBid(candidate.sell1.symbol);
         if (!priceSell1) continue;
+
+        console.log("p1", priceBuy1); 
+        console.log("p2", priceBuy2)
+        console.log("p3", priceSell1);
 
         priceSell1 = parseFloat(priceSell1.price);
 
