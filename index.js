@@ -63,55 +63,6 @@ function getSymbolMap(symbols) {
 }
 
 
-
-
-// function formatNumber(value, step_size) {
-//     // Verifica se o valor é um número
-//     if (typeof value !== 'number') {
-//         console.error('Erro: o valor deve ser um número');
-//         return;
-//     }
-
-//     // Calcula o número de casas decimais com base em step_size
-//     const decimalPlaces = Math.max(0, -Math.floor(Math.log10(step_size)));
-
-//     // Formata o número com o número correto de casas decimais
-//     return value.toFixed(decimalPlaces);
-// }
-
-//console.log(formatNumber(value, step_size)); // Saída: 123.46
-
-function adjustStepSize(qty, min_val, max_val, step_size) {
-    // Ajuste a quantidade para que ela esteja de acordo com as regras de LOT_SIZE
-    qty = Math.max(qty, min_val);  // A quantidade não pode ser menor que min_val
-    qty = Math.min(qty, max_val);  // A quantidade não pode ser maior que max_val
-
-    // Determine o número de casas decimais do step_size
-    let decimalPlaces = (step_size.toString().split('.')[1] || []).length;
-
-    // Ajusta a quantidade para ter o número correto de casas decimais
-    // Use a função Math.floor() em vez de round() para evitar arredondamento
-    let trunc_modifier = Math.pow(10, decimalPlaces);
-    return Math.floor(qty * trunc_modifier) / trunc_modifier;
-}
-
-async function getBestBid(symbol) {
-    return new Promise((resolve, reject) => {
-        binance.websockets.bookTickers(symbol, (ticker) => {
-            resolve(ticker.bestBid);          
-        });
-    });
-}
-
-async function getBestAsk(symbol) {
-    return new Promise((resolve, reject) => {
-        binance.websockets.bookTickers(symbol, (ticker) => {
-            resolve(ticker.bestAsk); 
-        });
-    });
-}
-
-
 let isTaskRunning = false;
 
 
@@ -137,7 +88,7 @@ async function processBuyBuySell(buyBuySell) {
         let priceSell1 = await getBestBid(candidate.sell1.symbol);
         if (!priceSell1) continue;
 
-        console.log("p1", priceBuy1); 
+        console.log("p1", priceBuy1);
         console.log("p2", priceBuy2)
         console.log("p3", priceSell1);
 
@@ -203,7 +154,7 @@ async function processBuyBuySell(buyBuySell) {
             //Erro ao vender PHB: {"statusCode":400,"body":"{\"code\":-1013,\"msg\":\"Filter failure: LOT_SIZE\"}
 
 
-            
+
             //process.exit(0);
 
 
@@ -248,7 +199,16 @@ function processBuySellSell(buySellSell) {
 }
 
 
+let prices = {};
 
+// Inicializa o WebSocket
+binance.websockets.prevDay(false, (error, response) => {
+    // Atualiza o objeto de preços com os novos valores
+    prices[response.symbol] = {
+        bestAsk: parseFloat(response.bestAsk),
+        bestBid: parseFloat(response.bestBid)
+    };
+});
 async function start() {
 
     //pega todas moedas que estão sendo negociadas
@@ -270,17 +230,14 @@ async function start() {
     const buySellSell = getBuySellSell(buySymbols, allSymbols, symbolsMap);
     console.log('There are ' + buySellSell.length + " pairs that we can do BSS");
 
-
-
     setInterval(async () => {
 
         console.log(new Date());
-        processBuyBuySell(buyBuySell);
-        //process.exit(0);
-        //processBuySellSell(buySellSell);
+        console.log(prices['BTCUSDT']);
 
 
-    }, INTERVAL)
+    }, 3000)
+
 }
 
 start();
