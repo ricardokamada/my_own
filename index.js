@@ -233,10 +233,42 @@ async function start() {
     setInterval(async () => {
 
         console.log(new Date());
-        console.log(prices['BTCUSDT']);
+
+        for (let i = 0; i < buyBuySell.length; i++) {
+            const candidate = buyBuySell[i];
+    
+    
+            //verifica se já temos todos os preços
+            let priceBuy1 = prices[candidate.buy1.symbol];
+            if (!priceBuy1) continue;
+    
+            priceBuy1 = parseFloat(priceBuy1.bestAsk);
+    
+            let priceBuy2 = prices[candidate.buy2.symbol];
+            if (!priceBuy2) continue;
+    
+            priceBuy2 = parseFloat(priceBuy2.bestAsk);
+    
+            let priceSell1 = prices[candidate.sell1.symbol];
+            if (!priceSell1) continue;
+    
+            priceSell1 = parseFloat(priceSell1.bestBid);
+    
+            //se tem o preço dos 3, pode analisar a lucratividade
+            const crossRate = (1 / priceBuy1) * (1 / priceBuy2) * priceSell1;
+
+            if (crossRate >= 1.003){
+                console.log("Cross/rate", crossRate);
+                process.exit(0);
+            }
+
+            
+        }
+        
+        
 
 
-    }, 3000)
+    }, 1)
 
 }
 
