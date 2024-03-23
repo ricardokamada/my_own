@@ -91,16 +91,16 @@ async function getSymbolBalance(symbol) {
 
 
 
-function adjustStepSize(qty, min, max, step_size) {
-    // Ajuste a quantidade para que ela esteja de acordo com as regras de LOT_SIZE
-    qty = Math.max(qty, min); // A quantidade não pode ser menor que min
-    qty = Math.min(qty, max); // A quantidade não pode ser maior que max
+// function adjustStepSize(qty, min, max, step_size) {
+//     // Ajuste a quantidade para que ela esteja de acordo com as regras de LOT_SIZE
+//     qty = Math.max(qty, min); // A quantidade não pode ser menor que min
+//     qty = Math.min(qty, max); // A quantidade não pode ser maior que max
 
-    // Determine o número de casas decimais do step_size
-    let decimalPlaces = (step_size.toString().split('.')[1] || []).length;
+//     // Determine o número de casas decimais do step_size
+//     let decimalPlaces = (step_size.toString().split('.')[1] || []).length;
 
-    return qty.toFixed(decimalPlaces); // Ajusta a quantidade para ter o número correto de casas decimais
-}
+//     return qty.toFixed(decimalPlaces); // Ajusta a quantidade para ter o número correto de casas decimais
+// }
 
 
 // let myOwn = adjustStepSize(4.7, 0.0001, 80, 0.00001);
