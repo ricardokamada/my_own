@@ -121,7 +121,7 @@ async function getSymbolBalance(symbol) {
 
 
 
-// binance.marketSell('BTCUSDT', 0.01473, (error, response) => {
+// binance.marketSell('BTCBRL', 0.0005, (error, response) => {
 //     if (response){
 //         console.log("Sussefuly !", response.orderId);
 //     }
@@ -130,7 +130,7 @@ async function getSymbolBalance(symbol) {
 
 async function x() {
     try {
-        let balance = await getSymbolBalance("USDT");
+        let balance = await getSymbolBalance("BRL");
         
 
         console.log("Sussefuly !", balance);
