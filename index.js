@@ -62,6 +62,50 @@ function getSymbolMap(symbols) {
     return map;
 }
 
+async function executeTradeBbs(symbol1, symbol2, symbol3) {
+
+    isTaskRunning = true;
+
+    console.log(`OP BBS EM ${symbol1} > ${symbol2} > ${symbol3} `);
+
+    let buy1Response, buy2Response, sell1Response, quantity_buy1;
+
+    quantity_buy1 = process.env.AMOUNT;
+
+    try {
+        buy1Response = await binance.marketBuy(symbol1.toString(), null, { quoteOrderQty: parseFloat(quantity_buy1) });
+        console.log(`Compra de ${symbol1} efetuada com sucesso. Total comprado de  : ${buy1Response.executedQty} no preco -----`);
+    } catch (error) {
+        console.error(`Erro ao comprar ${symbol1}: ${JSON.stringify(error)}`);
+    }
+
+    if (buy1Response.status === 'FILLED') {
+        try {
+            buy2Response = await binance.marketBuy(symbol2.toString(), null, { quoteOrderQty: buy1Response.executedQty });
+            console.log(`Compra de ${symbol2} efetuada com sucesso. Total comprado de  : ${buy2Response.executedQty} no preco ------`);
+        } catch (error) {
+            console.error(`Erro ao comprar ${symbol2}: ${JSON.stringify(error)}`);
+        }
+    }
+
+    if (buy2Response.status === 'FILLED') {
+        try {
+            sell1Response = await binance.marketSell(symbol3, buy2Response.executedQty);
+            console.log(`Venda de ${symbol3} efetuada com sucesso. Total vendido de  : ${sell1Response.executedQty} no preco ------`);
+        } catch (error) {
+            console.error(`Erro ao vender ${symbol3}: ${JSON.stringify(error)}`);
+        }
+    }
+
+    if(buy1Response.orderId && buy2Response.orderId && sell1Response.orderId){
+        console.log("All operations completed successfully!")
+    }
+
+    isTaskRunning = false;
+}
+
+
+
 
 let isTaskRunning = false;
 
@@ -214,7 +258,7 @@ binance.websockets.prevDay(false, (error, response) => {
     updatedSymbols.add(response.symbol);
 });
 
-
+let contatador = 0;
 
 async function start() {
 
@@ -241,17 +285,24 @@ async function start() {
     console.log('There are ' + buySellSell.length + " pairs that we can do BSS");
 
 
+
     setInterval(async () => {
         console.log(new Date());
+        console.log("pares encontados :", contatador);
 
         if (!isTaskRunning && updatedSymbols.size > 0) {
             for (const symbol of updatedSymbols) {
                 // Verifica apenas os símbolos que foram atualizados
                 // E verifica se eles têm pares de triangulação em buyBuySell
-                const relevantPairs = buyBuySell.filter(pair =>
+                const relevantPairs_bbs = buyBuySell.filter(pair =>
                     pair.buy1.symbol === symbol || pair.buy2.symbol === symbol || pair.sell1.symbol === symbol
                 );
-                for (const candidate of relevantPairs) {
+
+                const relevantPairs_bss = buySellSell.filter(pair =>
+                    pair.buy1.symbol === symbol || pair.sell1.symbol === symbol || pair.sell2.symbol === symbol
+                );
+
+                for (const candidate of relevantPairs_bbs) {
                     // Verifique se você já tem os preços necessários
                     const priceBuy1 = prices[candidate.buy1.symbol];
                     const priceBuy2 = prices[candidate.buy2.symbol];
@@ -262,90 +313,16 @@ async function start() {
                     //se tem o preço dos 3, pode analisar a lucratividade
                     const crossRate = (1 / priceBuy1.bestAsk) * (1 / priceBuy2.bestAsk) * priceSell1.bestBid;
 
-                    let stepSize1 = parseFloat(candidate.buy1.stepSize);
-                    let stepSize2 = parseFloat(candidate.buy2.stepSize);
-                    let stepSize3 = parseFloat(candidate.sell1.stepSize);
-
                     // Se todas as condições forem atendidas, execute as operações de compra e venda
-                    if (crossRate >= PROFITABILITY && stepSize2 <= stepSize3) {
-
-                        console.log(`OP BBS EM ${candidate.buy1.symbol} > ${candidate.buy2.symbol} > ${candidate.sell1.symbol} = ${crossRate}`);
-
-                        let buy1Response, buy2Response, sell1Response, quantity_buy1;
-                        quantity_buy1 = process.env.AMOUNT;
-
-                        isTaskRunning = true;
-
-                        if (candidate.buy1.base === 'BTC') {
-
-                            // Primeira compra
-                            try {
-                                buy1Response = await binance.marketBuy(candidate.buy1.symbol.toString(), 0.001);
-                                console.log(`Compra de ${candidate.buy1.base} efetuada com sucesso. Total comprado de  : ${buy1Response.executedQty} no preco ${priceBuy1.bestAsk.toFixed(8)}`);
-                            } catch (error) {
-                                console.error(`Erro ao comprar ${candidate.buy1.base}: ${JSON.stringify(error)}`);
-                            }
-                        }
-                        if (candidate.buy1.base === 'ETH') {
-
-                            // Primeira compra
-                            try {
-                                buy1Response = await binance.marketBuy(candidate.buy1.symbol.toString(), 0.003);
-                                console.log(`Compra de ${candidate.buy1.base} efetuada com sucesso. Total comprado de  : ${buy1Response.executedQty} no preco ${priceBuy1.bestAsk.toFixed(8)}`);
-                            } catch (error) {
-                                console.error(`Erro ao comprar ${candidate.buy1.base}: ${JSON.stringify(error)}`);
-                            }
-                        }
-                        if (candidate.buy1.base === 'USDT') {
-
-                            // Primeira compra
-                            try {
-                                buy1Response = await binance.marketBuy(candidate.buy1.symbol.toString(), 10 );
-                                console.log(`Compra de ${candidate.buy1.base} efetuada com sucesso. Total comprado de  : ${buy1Response.executedQty} no preco ${priceBuy1.bestAsk.toFixed(8)}`);
-                            } catch (error) {
-                                console.error(`Erro ao comprar ${candidate.buy1.base}: ${JSON.stringify(error)}`);
-                            }
-                        }
-                        if (candidate.buy1.base === 'BNB') {
-
-                            // Primeira compra
-                            try {
-                                buy1Response = await binance.marketBuy(candidate.buy1.symbol.toString(), 0.004 );
-                                console.log(`Compra de ${candidate.buy1.base} efetuada com sucesso. Total comprado de  : ${buy1Response.executedQty} no preco ${priceBuy1.bestAsk.toFixed(8)}`);
-                            } catch (error) {
-                                console.error(`Erro ao comprar ${candidate.buy1.base}: ${JSON.stringify(error)}`);
-                            }
-                        }
-
-                        // Segunda compra
-                        if (buy1Response.status === 'FILLED') {
-                            try {
-                                buy2Response = await binance.marketBuy(candidate.buy2.symbol.toString(), null, { quoteOrderQty: buy1Response.executedQty });
-                                console.log(`Compra de ${candidate.buy2.base} efetuada com sucesso. Total comprado de  : ${buy2Response.executedQty} no preco ${priceBuy2.bestAsk.toFixed(8)}`);
-                            } catch (error) {
-                                console.error(`Erro ao comprar ${candidate.buy2.base}: ${JSON.stringify(error)}`);
-                            }
-                        }
-
-                        // Venda
-                        if (buy2Response.status === 'FILLED') {
-                            try {
-                                sell1Response = await binance.marketSell(candidate.sell1.symbol.toString(), buy2Response.executedQty);
-                                console.log(`Venda de ${candidate.sell1.base} efetuada com sucesso. Total vendido de  : ${sell1Response.executedQty} no preco ${priceSell1.bestBid}`);
-                            } catch (error) {
-                                console.error(`Erro ao vender ${candidate.sell1.base}: ${JSON.stringify(error)}`);
-                            }
-                        }
-
-                        isTaskRunning = false; // Redefine para falso após a conclusão de todas as compras
+                    if (crossRate >= PROFITABILITY) {
+                        executeTradeBbs(candidate.buy1.symbol, candidate.buy2.symbol, candidate.sell1.symbol);
                     }
 
-                    else {
-                        console.log(`CrossRate ${symbol} --> ${crossRate.toFixed(3)}`);
-
-                    }
                 }
 
+                for (const candidate of relevantPairs_bss) {
+                    continue;
+                }
 
                 // Remova o símbolo da lista de símbolos atualizados
                 updatedSymbols.delete(symbol);

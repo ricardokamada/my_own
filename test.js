@@ -130,7 +130,7 @@ async function getSymbolBalance(symbol) {
 
 async function x() {
     try {
-        let balance = await getSymbolBalance("BRL");
+        let balance = await getSymbolBalance("USDT");
         
 
         console.log("Sussefuly !", balance);
