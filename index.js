@@ -64,7 +64,6 @@ function getSymbolMap(symbols) {
 
 async function executeTradeBbs(symbol1, symbol2, symbol3) {
 
-    isTaskRunning = true;
 
     console.log(`OP BBS EM ${symbol1} > ${symbol2} > ${symbol3} `);
 
@@ -90,18 +89,17 @@ async function executeTradeBbs(symbol1, symbol2, symbol3) {
 
     if (buy2Response.status === 'FILLED') {
         try {
-            sell1Response = await binance.marketSell(symbol3, buy2Response.executedQty);
+            sell1Response = await binance.marketSell(symbol3.toString(), buy2Response.executedQty);
             console.log(`Venda de ${symbol3} efetuada com sucesso. Total vendido de  : ${sell1Response.executedQty} no preco ------`);
         } catch (error) {
             console.error(`Erro ao vender ${symbol3}: ${JSON.stringify(error)}`);
         }
     }
 
-    if(buy1Response.orderId && buy2Response.orderId && sell1Response.orderId){
-        console.log("All operations completed successfully!")
+    if (buy1Response && buy1Response.orderId && buy2Response && buy2Response.orderId && sell1Response && sell1Response.orderId) {
+        console.log("All operations completed successfully!");
     }
 
-    isTaskRunning = false;
 }
 
 
@@ -288,9 +286,8 @@ async function start() {
 
     setInterval(async () => {
         console.log(new Date());
-        console.log("pares encontados :", contatador);
 
-        if (!isTaskRunning && updatedSymbols.size > 0) {
+        if (updatedSymbols.size > 0) {
             for (const symbol of updatedSymbols) {
                 // Verifica apenas os símbolos que foram atualizados
                 // E verifica se eles têm pares de triangulação em buyBuySell
@@ -303,19 +300,25 @@ async function start() {
                 );
 
                 for (const candidate of relevantPairs_bbs) {
-                    // Verifique se você já tem os preços necessários
-                    const priceBuy1 = prices[candidate.buy1.symbol];
-                    const priceBuy2 = prices[candidate.buy2.symbol];
-                    const priceSell1 = prices[candidate.sell1.symbol];
 
-                    if (!priceBuy1 || !priceBuy2 || !priceSell1) continue;
+                    if(!isTaskRunning){
+                    
+                        // Verifique se você já tem os preços necessários
+                        const priceBuy1 = prices[candidate.buy1.symbol];
+                        const priceBuy2 = prices[candidate.buy2.symbol];
+                        const priceSell1 = prices[candidate.sell1.symbol];
 
-                    //se tem o preço dos 3, pode analisar a lucratividade
-                    const crossRate = (1 / priceBuy1.bestAsk) * (1 / priceBuy2.bestAsk) * priceSell1.bestBid;
+                        if (!priceBuy1 || !priceBuy2 || !priceSell1) continue;
 
-                    // Se todas as condições forem atendidas, execute as operações de compra e venda
-                    if (crossRate >= PROFITABILITY) {
-                        executeTradeBbs(candidate.buy1.symbol, candidate.buy2.symbol, candidate.sell1.symbol);
+                        //se tem o preço dos 3, pode analisar a lucratividade
+                        const crossRate = (1 / priceBuy1.bestAsk) * (1 / priceBuy2.bestAsk) * priceSell1.bestBid;
+
+                        // Se todas as condições forem atendidas, execute as operações de compra e venda
+                        if (crossRate >= PROFITABILITY ) {
+                            isTaskRunning = true;
+                            await executeTradeBbs(candidate.buy1.symbol, candidate.buy2.symbol, candidate.sell1.symbol);
+                            isTaskRunning = false;
+                        }
                     }
 
                 }
@@ -333,7 +336,7 @@ async function start() {
         // if (!isTaskRunning && updatedSymbols.size === 0 && buyBuySell.every(candidate => prices[candidate.buy1.symbol] && prices[candidate.buy2.symbol] && prices[candidate.sell1.symbol])) {
         //     process.exit(0);
         // }
-    }, 1000);
+    }, 3000);
 
 
 
