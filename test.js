@@ -130,10 +130,11 @@ async function getSymbolBalance(symbol) {
 
 async function x() {
     try {
-        let balance = await getSymbolBalance("USDT");
+        let balance_BTC = await getSymbolBalance("BTC");
+        let balance_USDT = await getSymbolBalance("USDT");
         
 
-        console.log("Sussefuly !", balance);
+        console.log("BTC --> ", balance_BTC, "USDT  --->", balance_USDT);
 
     } catch (error) {
         console.error("Erro ao obter saldo:", error);

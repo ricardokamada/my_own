@@ -62,6 +62,34 @@ function getSymbolMap(symbols) {
     return map;
 }
 
+
+function ajustarValorComStepSize(valor, stepSize) {
+    const numeroCasasDecimais = -Math.floor(Math.log10(parseFloat(stepSize)));
+    return valor.toFixed(numeroCasasDecimais);
+}
+function calcularCasasDecimais(valor, stepSize) {
+    // Convertendo o valor para um número
+    const valorNum = parseFloat(valor);
+
+    // Verificando se o valor é um número válido
+    if (!isNaN(valorNum)) {
+        // Convertendo o stepSize para um número
+        const stepSizeNum = parseFloat(stepSize);
+
+        // Verificando se o stepSize é um número válido maior que zero
+        if (!isNaN(stepSizeNum) && stepSizeNum > 0) {
+            // Calculando o número de casas decimais com base no logaritmo do inverso do stepSize
+            const numCasasDecimais = -Math.floor(Math.log10(stepSizeNum));
+
+            // Arredondando o valor para o número correto de casas decimais
+            return valorNum.toFixed(numCasasDecimais);
+        }
+    }
+
+    // Se não for possível converter para número ou se o stepSize não for válido, retornar o valor original
+    return valor;
+}
+
 async function executeTradeBbs(symbol1, symbol2, symbol3) {
 
 
@@ -74,11 +102,10 @@ async function executeTradeBbs(symbol1, symbol2, symbol3) {
     if (stepSizeNumeric === 1 || stepSizeNumeric === 0.1 || stepSizeNumeric === 0.01) {
         quantity_buy1 = 10;
     } else if (stepSizeNumeric <= 0.001) {
-        quantity_buy1 = 0.001;
+        quantity_buy1 = 0.0003;
     }
-    
 
-    await new Promise(resolve => setTimeout(resolve, 500)); // Aguarde o próximo intervalo
+    console.log('minNotional', symbol1.minNotional, symbol2.minNotional, symbol3.minNotional);
 
     try {
         buy1Response = await binance.marketBuy(symbol1.symbol.toString(), quantity_buy1 );
@@ -114,24 +141,15 @@ async function executeTradeBbs(symbol1, symbol2, symbol3) {
 
 }
 
-async function executeTradeBss(symbol1, symbol2, symbol3) {
+async function executeTradeBss(symbol1, symbol2, symbol3, price) {
 
 
     console.log(`OP BSS EM ${symbol1.symbol} > ${symbol2.symbol} > ${symbol3.symbol} `);
 
     let buy1Response, buy2Response, sell1Response, quantity_buy1;
 
-    console.log(symbol1.stepSize, "#####################################   tipo", typeof(symbol1.stepSize));
+    quantity_buy1 = calcularCasasDecimais(process.env.AMOUNT/price, symbol1.stepSize);
 
-    const stepSizeNumeric = parseFloat(symbol1.stepSize);
-
-    if (stepSizeNumeric === 1 || stepSizeNumeric === 0.1 || stepSizeNumeric === 0.01) {
-        quantity_buy1 = 10;
-    } else if (stepSizeNumeric <= 0.001) {
-        quantity_buy1 = 0.001;
-    }
-    
-    console.log(quantity_buy1 , "Total a ser comrpado !!!!!!!!!");
 
     try {
         buy1Response = await binance.marketBuy(symbol1.symbol.toString(), quantity_buy1);
@@ -140,18 +158,22 @@ async function executeTradeBss(symbol1, symbol2, symbol3) {
         console.error(`Erro ao comprar ${symbol1.symbol}: ${JSON.stringify(error)}`);
     }
 
+    let sell2 = calcularCasasDecimais(buy1Response.executedQty, symbol2.stepSize);
     if (buy1Response.status === 'FILLED') {
         try {
-            buy2Response = await binance.marketSell(symbol2.symbol.toString(), buy1Response.executedQty);
-            console.log(`Venda de ${symbol2.symbol} efetuada com sucesso. Total comprado de  : ${buy2Response.executedQty} no preco ------`);
+            buy2Response = await binance.marketSell(symbol2.symbol.toString(), sell2);
+            console.log(`Venda de ${symbol2.symbol} efetuada com sucesso. Total vendido de  : ${buy2Response.executedQty} no preco ------`);
         } catch (error) {
             console.error(`Erro ao vender ${symbol2.symbol}: ${JSON.stringify(error)}`);
         }
     }
 
+    
+    let sell3 = buy2Response.fills[0].price * buy2Response.fills[0].qty;
+    sell3 = calcularCasasDecimais(sell3, symbol3.stepSize);
     if (buy2Response.status === 'FILLED') {
         try {
-            sell1Response = await binance.marketSell(symbol3.symbol.toString(), buy2Response.executedQty);
+            sell1Response = await binance.marketSell(symbol3.symbol.toString(), sell3);
             console.log(`Venda de ${symbol3.symbol} efetuada com sucesso. Total vendido de  : ${sell1Response.executedQty} no preco ------`);
         } catch (error) {
             console.error(`Erro ao vender ${symbol3.symbol}: ${JSON.stringify(error)}`);
@@ -407,7 +429,7 @@ async function start() {
                         if (crossRate >= PROFITABILITY) {
                             isTaskRunning = true;
                             //await executeTradeBbs(candidate.buy1.symbol, candidate.buy2.symbol, candidate.sell1.symbol);
-                            await executeTradeBss(candidate.buy1, candidate.sell1, candidate.sell2);
+                            await executeTradeBss(candidate.buy1, candidate.sell1, candidate.sell2, priceBuy1.bestAsk);
 
                             isTaskRunning = false;
                         }
